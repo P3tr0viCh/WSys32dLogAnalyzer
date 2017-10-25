@@ -17,7 +17,6 @@
 class TMain : public TForm {
 __published: // IDE-managed Components
 
-	TListView *lvTemperatures;
 	TStatusBar *StatusBar;
 	TMainMenu *MainMenu;
 	TMenuItem *miMainFile;
@@ -27,13 +26,21 @@ __published: // IDE-managed Components
 	TOpenDialog *OpenDialog;
 	TMenuItem *miMainHelp;
 	TMenuItem *miHelpAbout;
-	TListView *lvZeros;
-	TSplitter *Splitter;
 	TMenuItem *miMainData;
 	TMenuItem *miDataGotoNextError;
 	TMenuItem *miDataGotoPrevError;
 	TMenuItem *miSeparator02;
 	TMenuItem *miDataFindDateTime;
+	TListView *lvZeros;
+	TListView *lvTemperatures;
+	TSplitter *Splitter;
+	TPanel *pnlZeros;
+	TPanel *pnlBottom;
+	TPanel *pnlTemperatures;
+	TLabel *lblZerosCaption;
+	TLabel *lblZeros;
+	TLabel *lblTemperaturesCaption;
+	TLabel *lblTemperatures;
 
 	void __fastcall miFileCloseClick(TObject *Sender);
 	void __fastcall miFileOpenLogClick(TObject *Sender);
@@ -72,6 +79,9 @@ private: // User declarations
 	void Analyze(TStrings* LogStrings);
 	void CalcZerosDeltas();
 
+	int GetZerosErrorCount();
+	int GetTemperaturesErrorCount();
+
 	void OpenLog(TFileName FileName);
 	void OpenLogs(TStrings* FileNames);
 
@@ -79,6 +89,7 @@ private: // User declarations
 
 	void UpdateStatusBar(TStrings* ATypes, TStrings* AScales,
 		TStrings* AFileNames);
+	void UpdateCaptions(int ZerosErrorCount, int TemperaturesErrorCount);
 
 public: // User declarations
 	__fastcall TMain(TComponent* Owner);

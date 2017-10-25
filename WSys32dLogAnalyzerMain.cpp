@@ -46,6 +46,7 @@ void __fastcall TMain::FormCreate(TObject *Sender) {
 	Types = new TStringList();
 	Scales = new TStringList();
 
+	UpdateCaptions(-1, -1);
 	UpdateStatusBar(NULL, NULL, NULL);
 
 	TFileIni* FileIni = TFileIni::GetNewInstance();
@@ -155,7 +156,7 @@ TListItem* TMain::SetListItemTemperatures(int Index, String DateTime,
 			Count = 4;
 		}
 
-		float T, Avr = 0, Max = FLT_MIN, Min = FLT_MAX;
+		float T, Avr = 0, Max = -FLT_MAX, Min = FLT_MAX;
 
 		for (int i = 0; i < Count; i++) {
 			T = SToF(Temperatures[i]);
@@ -172,7 +173,7 @@ TListItem* TMain::SetListItemTemperatures(int Index, String DateTime,
 
 		ListItem->SubItems->Add(FToS(Avr));
 
-		float Delta = fabs(Max - Min);
+		float Delta = Max - Min;
 
 		ListItem->SubItems->Add(FToS(Delta));
 
@@ -384,7 +385,30 @@ void TMain::CalcZerosDeltas() {
 }
 
 // ---------------------------------------------------------------------------
+int TMain::GetZerosErrorCount() {
+	int ErrorCount = 0;
+	for (int i = 0; i < lvZeros->Items->Count; i++) {
+		if (lvZeros->Items->Item[i]->Cut) {
+			ErrorCount++;
+		}
+	}
+	return ErrorCount;
+}
+
+// ---------------------------------------------------------------------------
+int TMain::GetTemperaturesErrorCount() {
+	int ErrorCount = 0;
+	for (int i = 0; i < lvTemperatures->Items->Count; i++) {
+		if (lvTemperatures->Items->Item[i]->Cut) {
+			ErrorCount++;
+		}
+	}
+	return ErrorCount;
+}
+
+// ---------------------------------------------------------------------------
 void TMain::OpenLogs(TStrings * FileNames) {
+	UpdateCaptions(-1, -1);
 	UpdateStatusBar(NULL, NULL, NULL);
 
 	ShowWaitCursor();
@@ -414,12 +438,13 @@ void TMain::OpenLogs(TStrings * FileNames) {
 				Format("Анализ: %d%%", ARRAYOFCONST((Percent(i + 1, Count))));
 		}
 
-		UpdateStatusBar(Types, Scales, FileNames);
-
 		lvZeros->AlphaSort();
 		lvTemperatures->AlphaSort();
 
 		CalcZerosDeltas();
+
+		UpdateCaptions(GetZerosErrorCount(), GetTemperaturesErrorCount());
+		UpdateStatusBar(Types, Scales, FileNames);
 	}
 	__finally {
 		LogStrings->Free();
@@ -516,6 +541,30 @@ void TMain::UpdateStatusBar(TStrings * ATypes, TStrings * AScales,
 	StatusBar->Panels->Items[STATUSBAR_TYPES]->Text = STypes;
 	StatusBar->Panels->Items[STATUSBAR_SCALES]->Text = SScales;
 	StatusBar->Panels->Items[STATUSBAR_FILENAMES]->Text = SFileNames;
+}
+
+// ---------------------------------------------------------------------------
+void TMain::UpdateCaptions(int ZerosErrorCount, int TemperaturesErrorCount) {
+	String Zeros = "";
+	String Temperatures = "";
+
+	if (ZerosErrorCount >= 0) {
+		if (ZerosErrorCount == 0) {
+			Zeros += "Ошибок нет";
+		} else {
+			Zeros += "Ошибок: " + IntToStr(ZerosErrorCount);
+		}
+	}
+	if (TemperaturesErrorCount >= 0) {
+		if (TemperaturesErrorCount == 0) {
+			Temperatures += "Ошибок нет";
+		} else {
+			Temperatures += "Ошибок: " + IntToStr(TemperaturesErrorCount);
+		}
+	}
+
+	lblZeros->Caption = Zeros;
+	lblTemperatures->Caption = Temperatures;
 }
 
 // ---------------------------------------------------------------------------

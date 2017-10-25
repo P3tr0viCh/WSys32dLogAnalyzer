@@ -2,9 +2,11 @@ object Main: TMain
   Left = 0
   Top = 0
   Caption = #1040#1085#1072#1083#1080#1079' '#1083#1086#1075#1086#1074' WSys32d'
-  ClientHeight = 453
-  ClientWidth = 683
+  ClientHeight = 500
+  ClientWidth = 700
   Color = clBtnFace
+  Constraints.MinHeight = 500
+  Constraints.MinWidth = 700
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -16
@@ -19,33 +21,22 @@ object Main: TMain
   TextHeight = 21
   object Splitter: TSplitter
     Left = 0
-    Top = 271
-    Width = 683
+    Top = 272
+    Width = 700
     Height = 4
     Cursor = crVSplit
     Align = alBottom
+    AutoSnap = False
+    MinSize = 200
     ResizeStyle = rsUpdate
-    ExplicitTop = 277
-  end
-  object lvTemperatures: TListView
-    Left = 0
-    Top = 275
-    Width = 683
-    Height = 154
-    Align = alBottom
-    Columns = <>
-    ReadOnly = True
-    RowSelect = True
-    TabOrder = 1
-    ViewStyle = vsReport
-    OnCompare = lvZerosCompare
-    OnCustomDrawSubItem = lvTemperaturesCustomDrawSubItem
-    OnDblClick = lvZerosDblClick
+    ExplicitLeft = 8
+    ExplicitTop = 279
+    ExplicitWidth = 683
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 429
-    Width = 683
+    Top = 476
+    Width = 700
     Height = 24
     Panels = <
       item
@@ -65,18 +56,110 @@ object Main: TMain
   end
   object lvZeros: TListView
     Left = 0
-    Top = 0
-    Width = 683
-    Height = 271
+    Top = 32
+    Width = 700
+    Height = 240
     Align = alClient
     Columns = <>
     ReadOnly = True
     RowSelect = True
-    TabOrder = 0
+    TabOrder = 1
     ViewStyle = vsReport
     OnCompare = lvZerosCompare
     OnCustomDrawSubItem = lvZerosCustomDrawSubItem
     OnDblClick = lvZerosDblClick
+  end
+  object pnlZeros: TPanel
+    Left = 0
+    Top = 0
+    Width = 700
+    Height = 32
+    Align = alTop
+    BevelOuter = bvNone
+    Caption = 'pnlZeros'
+    Padding.Left = 8
+    Padding.Right = 8
+    ShowCaption = False
+    TabOrder = 0
+    object lblZerosCaption: TLabel
+      Left = 8
+      Top = 0
+      Width = 197
+      Height = 32
+      Align = alLeft
+      Caption = #1058#1077#1085#1079#1086#1084#1077#1090#1088#1080#1095#1077#1089#1082#1080#1077' '#1076#1072#1090#1095#1080#1082#1080
+      Layout = tlCenter
+      ExplicitHeight = 21
+    end
+    object lblZeros: TLabel
+      Left = 656
+      Top = 0
+      Width = 36
+      Height = 32
+      Align = alRight
+      Alignment = taRightJustify
+      Caption = '1981'
+      Layout = tlCenter
+      ExplicitHeight = 21
+    end
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Top = 276
+    Width = 700
+    Height = 200
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 2
+    object lvTemperatures: TListView
+      Left = 0
+      Top = 28
+      Width = 700
+      Height = 172
+      Align = alClient
+      Columns = <>
+      ReadOnly = True
+      RowSelect = True
+      TabOrder = 0
+      ViewStyle = vsReport
+      OnCompare = lvZerosCompare
+      OnCustomDrawSubItem = lvTemperaturesCustomDrawSubItem
+      OnDblClick = lvZerosDblClick
+      ExplicitTop = 32
+      ExplicitHeight = 168
+    end
+    object pnlTemperatures: TPanel
+      Left = 0
+      Top = 0
+      Width = 700
+      Height = 28
+      Align = alTop
+      BevelOuter = bvNone
+      Caption = 'pnlTemperatures'
+      Padding.Left = 8
+      Padding.Right = 8
+      ShowCaption = False
+      TabOrder = 1
+      object lblTemperaturesCaption: TLabel
+        Left = 8
+        Top = 0
+        Width = 176
+        Height = 28
+        Align = alLeft
+        Caption = #1058#1077#1084#1087#1077#1088#1072#1090#1091#1088#1085#1099#1077' '#1076#1072#1090#1095#1080#1082#1080
+        ExplicitHeight = 24
+      end
+      object lblTemperatures: TLabel
+        Left = 656
+        Top = 0
+        Width = 36
+        Height = 28
+        Align = alRight
+        Alignment = taRightJustify
+        Caption = '1981'
+        ExplicitHeight = 21
+      end
+    end
   end
   object MainMenu: TMainMenu
     Left = 64
