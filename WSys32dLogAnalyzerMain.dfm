@@ -125,8 +125,6 @@ object Main: TMain
       OnCompare = lvZerosCompare
       OnCustomDrawSubItem = lvTemperaturesCustomDrawSubItem
       OnDblClick = lvZerosDblClick
-      ExplicitTop = 32
-      ExplicitHeight = 168
     end
     object pnlTemperatures: TPanel
       Left = 0
@@ -147,7 +145,7 @@ object Main: TMain
         Height = 28
         Align = alLeft
         Caption = #1058#1077#1084#1087#1077#1088#1072#1090#1091#1088#1085#1099#1077' '#1076#1072#1090#1095#1080#1082#1080
-        ExplicitHeight = 24
+        ExplicitHeight = 21
       end
       object lblTemperatures: TLabel
         Left = 656
@@ -212,9 +210,9 @@ object Main: TMain
   object OpenDialog: TOpenDialog
     DefaultExt = 'log'
     Filter = 
-      #1051#1086#1075#1080' '#1087#1088#1086#1074#1077#1089#1086#1082' (WDyn*.log)|WDyn*.log|'#1042#1089#1077' '#1083#1086#1075#1080' (*.log)|*.log|'#1042#1089#1077' '#1092 +
-      #1072#1081#1083#1099'|*.*'
-    Options = [ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+      #1051#1086#1075#1080' '#1087#1088#1086#1074#1077#1089#1086#1082' (WDyn*.log, WSta*.log)|WDyn*.log;WSta*.log|'#1042#1089#1077' '#1083#1086#1075 +
+      #1080' (*.log)|*.log|'#1042#1089#1077' '#1092#1072#1081#1083#1099'|*.*'
+    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing, ofDontAddToRecent]
     Left = 176
     Top = 96
   end

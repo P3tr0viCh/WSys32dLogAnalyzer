@@ -7,8 +7,6 @@
 
 #include <DateUtils.hpp>
 
-#include <boost/regex.hpp>
-
 #include "WSys32dLogAnalyzerMain.h"
 
 #include "UtilsStr.h"
@@ -19,21 +17,12 @@
 
 #include "AboutFrm.h"
 
+#define WD30_LOG_DATETIME 23
+
 // ---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
 TMain *Main;
-
-const wchar_t* CRegexStart = L".+START.+ (.+)-\\d+ [(]SCALES s[\\/]n (\\d+)[)]";
-const wchar_t* CRegexStop = L".+STOP.+";
-
-const wchar_t* CRegexZeros =
-	L"(\\d{2}\\.\\d{2}\\.\\d{4}.\\d{2}\\:\\d{2}\\:\\d{2}\\.\\d{3})[ ]Z[ ](.+)";
-const wchar_t* CRegexTemperatures =
-	L"(\\d{2}\\.\\d{2}\\.\\d{4}.\\d{2}\\:\\d{2}\\:\\d{2}\\.\\d{3})[ ]T[ ](.+)";
-
-const wchar_t* CRegexIntNumber = L"[-]?\\d+";
-const wchar_t* CRegexFloatNumber = L"[-]?\\d+[.]\\d+";
 
 // ---------------------------------------------------------------------------
 __fastcall TMain::TMain(TComponent * Owner) : TForm(Owner) {
@@ -120,21 +109,16 @@ TDateTime SToDT(String DT) {
 
 // ---------------------------------------------------------------------------
 TListItem* TMain::SetListItemZeros(int Index, String DateTime,
-	std::vector<String>Zeros) {
-	TListItem* ListItem = Index < 0 ? lvZeros->Items->Add() :
+	TStringList * Zeros) {
+	TListItem * ListItem = Index < 0 ? lvZeros->Items->Add() :
 		lvZeros->Items->Item[Index];
 
 	ListItem->Caption = DTToS(StrToDateTime(DateTime));
 	ListItem->SubItems->Clear();
 
-	int Count = Zeros.size();
-
-	if (Count > 0) {
-		for (std::vector<String>::iterator Zero = Zeros.begin();
-		Zero != Zeros.end(); Zero++) {
-			ListItem->SubItems->Add(*Zero);
-			ListItem->SubItems->Add("");
-		}
+	for (int i = 0; i < Zeros->Count; i++) {
+		ListItem->SubItems->Add(Zeros->Strings[i]);
+		ListItem->SubItems->Add("");
 	}
 
 	return ListItem;
@@ -142,47 +126,56 @@ TListItem* TMain::SetListItemZeros(int Index, String DateTime,
 
 // ---------------------------------------------------------------------------
 TListItem* TMain::SetListItemTemperatures(int Index, String DateTime,
-	std::vector<String>Temperatures) {
-	TListItem* ListItem = Index < 0 ? lvTemperatures->Items->Add() :
+	TStringList * Temperatures) {
+	TListItem * ListItem = Index < 0 ? lvTemperatures->Items->Add() :
 		lvTemperatures->Items->Item[Index];
 
 	ListItem->Caption = DTToS(StrToDateTime(DateTime));
 	ListItem->SubItems->Clear();
 
-	int Count = Temperatures.size();
+	int C = 0;
 
-	if (Count > 0) {
-		if (Count > 4) {
-			Count = 4;
+	float T, Delta = 0.0, Avr = 0.0, Max = -100, Min = 100;
+
+	for (int i = 0; i < Temperatures->Count; i++) {
+		try {
+			T = SToF(Temperatures->Strings[i]);
+		}
+		catch (...) {
+			T = 0.0;
 		}
 
-		float T, Avr = 0, Max = -FLT_MAX, Min = FLT_MAX;
-
-		for (int i = 0; i < Count; i++) {
-			T = SToF(Temperatures[i]);
-			Avr += T;
-
-			if (T > Max) {
-				Max = T;
-			}
-			if (T < Min) {
-				Min = T;
-			}
+		if (T == 0.0) {
+			continue;
 		}
-		Avr /= Count;
 
-		ListItem->SubItems->Add(FToS(Avr));
+		C++;
 
-		float Delta = Max - Min;
+		Avr += T;
 
-		ListItem->SubItems->Add(FToS(Delta));
-
-		ListItem->Cut = Delta > TemperaturesMaxDelta;
-
-		for (std::vector<String>::iterator Temperature = Temperatures.begin();
-		Temperature != Temperatures.end(); Temperature++) {
-			ListItem->SubItems->Add(*Temperature);
+		if (T > Max) {
+			Max = T;
 		}
+		if (T < Min) {
+			Min = T;
+		}
+	}
+
+	if (C > 0) {
+		Avr /= C;
+	}
+
+	if (Avr != 0.0) {
+		Delta = Max - Min;
+	}
+
+	ListItem->SubItems->Add(FToS(Avr));
+	ListItem->SubItems->Add(FToS(Delta));
+
+	ListItem->Cut = Delta > TemperaturesMaxDelta;
+
+	for (int i = 0; i < Temperatures->Count; i++) {
+		ListItem->SubItems->Add(Temperatures->Strings[i]);
 	}
 
 	return ListItem;
@@ -208,7 +201,7 @@ void TMain::UpdateZerosColumnCount(int Count) {
 			ListViewAddColumn(lvZeros, L"Δ", 60);
 		}
 		else {
-			ListViewAddColumn(lvZeros, "Z" + IntToStr(ZeroCol), 60);
+			ListViewAddColumn(lvZeros, "M" + IntToStr(ZeroCol), 60);
 			ZeroCol++;
 		}
 	}
@@ -221,103 +214,137 @@ void TMain::UpdateTemperaturesColumnCount(int Count) {
 	ListViewAddColumn(lvTemperatures, "Дата и время", 180);
 
 	ListViewAddColumn(lvTemperatures, "Tср", 80);
-	ListViewAddColumn(lvTemperatures, L"Δм", 80);
+	ListViewAddColumn(lvTemperatures, L"Δ", 80);
 	for (int i = 0; i < 4; i++) {
 		ListViewAddColumn(lvTemperatures, "T" + IntToStr(i + 1), 80);
 	}
 }
 
 // ---------------------------------------------------------------------------
-void TMain::Analyze(TStrings* LogStrings) {
-	boost::wregex RegexStart(CRegexStart);
-	boost::wregex RegexStop(CRegexStop);
-	boost::wregex RegexZeros(CRegexZeros);
-	boost::wregex RegexTemperatures(CRegexTemperatures);
-	boost::wregex RegexIntNumber(CRegexIntNumber);
-	boost::wregex RegexFloatNumber(CRegexFloatNumber);
+void TMain::Analyze(TStrings * LogStrings) {
+	String LogString;
 
-	std::wstring LogString, S;
-
-	boost::wsmatch Match;
+	char X;
 
 	String Type, ScaleNum;
-	String DateTime;
-	std::vector<String>VectorStrings;
-
-	bool InBlock = false;
+	String S;
+	String D;
+	String V;
 
 	int ZerosCount = 0;
 
-	for (int i = 0; i < LogStrings->Count; i++) {
-		Application->ProcessMessages();
+	int P, P1;
+	int Index;
 
-		LogString = LogStrings->Strings[i].c_str();
+	TStringList * Strings = new TStringList();
 
-		if (boost::regex_match(LogString, Match, RegexStart)) {
-			InBlock = true;
+	try {
+		for (int i = 0; i < LogStrings->Count; i++) {
+			Application->ProcessMessages();
 
-			if (IsEmpty(Type)) {
-				Type = Match[1].str().c_str();
-				ScaleNum = Match[2].str().c_str();
+			S = LogStrings->Strings[i];
+
+			if (S.IsEmpty()) {
+				continue;
 			}
 
-			continue;
-		}
-
-		if (boost::regex_match(LogString, Match, RegexStop)) {
-			InBlock = false;
-
-			continue;
-		}
-
-		if (!InBlock) {
-			continue;
-		}
-
-		if (boost::regex_match(LogString, Match, RegexZeros)) {
-			DateTime = Match[1].str().c_str();
-
-			S = Match[2].str();
-
-			boost::wsregex_token_iterator iter(S.begin(), S.end(),
-				RegexIntNumber, 0);
-			boost::wsregex_token_iterator end;
-
-			VectorStrings.clear();
-
-			for (; iter != end; iter++) {
-				VectorStrings.push_back(((std::wstring)*iter).c_str());
+			if (S.Length() < WD30_LOG_DATETIME + 2) {
+				continue;
 			}
 
-			if ((int)VectorStrings.size() > ZerosCount) {
-				ZerosCount = VectorStrings.size();
+			X = S[WD30_LOG_DATETIME + 2];
+
+			// ----------- Нули ------------------------------------------------
+			if (X == 'Z') {
+				D = S.SubString(1, WD30_LOG_DATETIME);
+
+				S.Delete(1, WD30_LOG_DATETIME + 2);
+
+				while (!S.IsEmpty()) {
+					V = S.SubString(1, 7);
+
+					Strings->Add(Trim(V));
+
+					S.Delete(1, 7);
+				}
+
+				if (Strings->Count > ZerosCount) {
+					ZerosCount = Strings->Count;
+				}
+
+				SetListItemZeros(-1, D, Strings);
+
+				continue;
 			}
 
-			SetListItemZeros(-1, DateTime, VectorStrings);
+			// ----------- Температуры -----------------------------------------
+			if (X == 'T') {
+				if (S.Length() < WD30_LOG_DATETIME + 4) {
+					continue;
+				}
 
-			continue;
-		}
+				if (S[WD30_LOG_DATETIME + 3] != ' ') {
+					continue;
+				}
 
-		if (boost::regex_match(LogString, Match, RegexTemperatures)) {
-			DateTime = Match[1].str().c_str();
+				if (S[WD30_LOG_DATETIME + 4] == ' ') {
+					continue;
+				}
 
-			S = Match[2].str();
+				D = S.SubString(1, WD30_LOG_DATETIME);
 
-			boost::wsregex_token_iterator iter(S.begin(), S.end(),
-				RegexFloatNumber, 0);
-			boost::wsregex_token_iterator end;
+				S.Delete(1, WD30_LOG_DATETIME + 3);
 
-			VectorStrings.clear();
+				Index = 1;
 
-			for (; iter != end; iter++) {
-				VectorStrings.push_back(((std::wstring)*iter).c_str());
+				S = S + " ";
+
+				while (!S.IsEmpty()) {
+					P = S.Pos(" ");
+
+					V = S.SubString(1, P - 1);
+
+					Strings->Add(Trim(V));
+
+					Index++;
+
+					if (Index > 4) {
+						break;
+					}
+
+					S.Delete(1, P);
+				}
+
+				SetListItemTemperatures(-1, D, Strings);
+
+				continue;
 			}
 
-			SetListItemTemperatures(-1, DateTime, VectorStrings);
+			// ----------- Тип и номер весов -----------------------------------
+			if (X == '{') {
+				P = S.Pos("s/n");
 
-			continue;
-		}
-	} // for
+				if (P == 0) {
+					continue;
+				}
+
+				ScaleNum = S.SubString(P + 4, S.Length() - P - 4);
+
+				P1 = S.Pos("ВД");
+
+				if (P1 > 0) {
+					Type = S.SubString(P1, P - P1 - 9);
+				}
+
+				continue;
+			}
+
+			Strings->Clear();
+		} // for
+	}
+	__finally {
+		Strings->Free();
+	}
 
 	if (IsEmpty(Type)) {
 		Type = "н/д";
@@ -435,12 +462,16 @@ void TMain::OpenLogs(TStrings * FileNames) {
 			Analyze(LogStrings);
 
 			StatusBar->SimpleText =
-				Format("Анализ: %d%%", ARRAYOFCONST((Percent(i + 1, Count))));
+				Format("Чтение: %d%%", ARRAYOFCONST((Percent(i + 1, Count))));
+
+			ProcMess;
 		}
 
+		StatusBar->SimpleText = "Сортировка...";
 		lvZeros->AlphaSort();
 		lvTemperatures->AlphaSort();
 
+		StatusBar->SimpleText = "Расчёт отклонений...";
 		CalcZerosDeltas();
 
 		UpdateCaptions(GetZerosErrorCount(), GetTemperaturesErrorCount());
@@ -551,14 +582,16 @@ void TMain::UpdateCaptions(int ZerosErrorCount, int TemperaturesErrorCount) {
 	if (ZerosErrorCount >= 0) {
 		if (ZerosErrorCount == 0) {
 			Zeros += "Ошибок нет";
-		} else {
+		}
+		else {
 			Zeros += "Ошибок: " + IntToStr(ZerosErrorCount);
 		}
 	}
 	if (TemperaturesErrorCount >= 0) {
 		if (TemperaturesErrorCount == 0) {
 			Temperatures += "Ошибок нет";
-		} else {
+		}
+		else {
 			Temperatures += "Ошибок: " + IntToStr(TemperaturesErrorCount);
 		}
 	}
@@ -623,7 +656,7 @@ void __fastcall TMain::lvZerosCompare(TObject * Sender, TListItem * Item1,
 }
 
 // ---------------------------------------------------------------------------
-void ListItemSelectAndShow(TListItem* ListItem) {
+void ListItemSelectAndShow(TListItem * ListItem) {
 	ListItem->Focused = true;
 	ListItem->Selected = true;
 	ListItem->MakeVisible(false);
@@ -688,7 +721,7 @@ void __fastcall TMain::miDataGotoPrevErrorClick(TObject * Sender) {
 }
 
 // ---------------------------------------------------------------------------
-void __fastcall TMain::miDataFindDateTimeClick(TObject *Sender) {
+void __fastcall TMain::miDataFindDateTimeClick(TObject * Sender) {
 	TListView* ListViewFrom;
 	TListView* ListViewTo;
 
@@ -731,7 +764,7 @@ void __fastcall TMain::miDataFindDateTimeClick(TObject *Sender) {
 }
 
 // ---------------------------------------------------------------------------
-void __fastcall TMain::lvZerosDblClick(TObject *Sender) {
+void __fastcall TMain::lvZerosDblClick(TObject * Sender) {
 	miDataFindDateTime->Click();
 }
 // ---------------------------------------------------------------------------

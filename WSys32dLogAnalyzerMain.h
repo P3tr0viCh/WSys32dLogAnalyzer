@@ -15,8 +15,7 @@
 
 // ---------------------------------------------------------------------------
 class TMain : public TForm {
-__published: // IDE-managed Components
-
+__published:
 	TStatusBar *StatusBar;
 	TMainMenu *MainMenu;
 	TMenuItem *miMainFile;
@@ -60,23 +59,22 @@ __published: // IDE-managed Components
 	void __fastcall miDataFindDateTimeClick(TObject *Sender);
 	void __fastcall lvZerosDblClick(TObject *Sender);
 
-private: // User declarations
-
+private:
 	int ZerosMaxDelta;
 	int TemperaturesMaxDelta;
 
-	TStrings* Types;
-	TStrings* Scales;
+	TStrings * Types;
+	TStrings * Scales;
 
 	void UpdateZerosColumnCount(int Count);
 	void UpdateTemperaturesColumnCount(int Count);
 
-	TListItem* SetListItemZeros(int Index, String DateTime,
-		std::vector<String>Zeros);
-	TListItem* SetListItemTemperatures(int Index, String DateTime,
-		std::vector<String>Temperatures);
+	TListItem * SetListItemZeros(int Index, String DateTime,
+		TStringList * Zeros);
+	TListItem * SetListItemTemperatures(int Index, String DateTime,
+		TStringList * Temperatures);
 
-	void Analyze(TStrings* LogStrings);
+	void Analyze(TStrings * LogStrings);
 	void CalcZerosDeltas();
 
 	int GetZerosErrorCount();
@@ -87,11 +85,11 @@ private: // User declarations
 
 	void GotoError(bool Next);
 
-	void UpdateStatusBar(TStrings* ATypes, TStrings* AScales,
-		TStrings* AFileNames);
+	void UpdateStatusBar(TStrings * ATypes, TStrings * AScales,
+		TStrings * AFileNames);
 	void UpdateCaptions(int ZerosErrorCount, int TemperaturesErrorCount);
 
-public: // User declarations
+public:
 	__fastcall TMain(TComponent* Owner);
 };
 
