@@ -85,22 +85,20 @@ object Main: TMain
       Left = 8
       Top = 0
       Width = 197
-      Height = 32
+      Height = 21
       Align = alLeft
       Caption = #1058#1077#1085#1079#1086#1084#1077#1090#1088#1080#1095#1077#1089#1082#1080#1077' '#1076#1072#1090#1095#1080#1082#1080
       Layout = tlCenter
-      ExplicitHeight = 21
     end
     object lblZeros: TLabel
       Left = 656
       Top = 0
       Width = 36
-      Height = 32
+      Height = 21
       Align = alRight
       Alignment = taRightJustify
       Caption = '1981'
       Layout = tlCenter
-      ExplicitHeight = 21
     end
   end
   object pnlBottom: TPanel
@@ -142,20 +140,18 @@ object Main: TMain
         Left = 8
         Top = 0
         Width = 176
-        Height = 28
+        Height = 21
         Align = alLeft
         Caption = #1058#1077#1084#1087#1077#1088#1072#1090#1091#1088#1085#1099#1077' '#1076#1072#1090#1095#1080#1082#1080
-        ExplicitHeight = 21
       end
       object lblTemperatures: TLabel
         Left = 656
         Top = 0
         Width = 36
-        Height = 28
+        Height = 21
         Align = alRight
         Alignment = taRightJustify
         Caption = '1981'
-        ExplicitHeight = 21
       end
     end
   end

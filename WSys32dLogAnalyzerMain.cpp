@@ -242,6 +242,8 @@ void TMain::Analyze(TStrings * LogStrings) {
 		for (int i = 0; i < LogStrings->Count; i++) {
 			Application->ProcessMessages();
 
+			Strings->Clear();
+
 			S = LogStrings->Strings[i];
 
 			if (S.IsEmpty()) {
@@ -338,8 +340,6 @@ void TMain::Analyze(TStrings * LogStrings) {
 
 				continue;
 			}
-
-			Strings->Clear();
 		} // for
 	}
 	__finally {
